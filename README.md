@@ -59,7 +59,7 @@ while True:
 
 ## Daisy chaining serial informations
 
-![Picture](DaisyChain)
+![Picture](DaisyChain.png)
 
 I prefer my measuring data travelling through cables under my control instead of going I don't know where into clouds or through WLAN.  
 But then I have the problem that there are multiple serial outputs that should be bundled  into one for treatment, maybe by Home Assistant.
