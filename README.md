@@ -11,7 +11,7 @@ Some tips for me, myself and I, and everyone who wants to use them. Mostly Micro
 ## External powering
 When using sensors it is often better to use a stabilised 5V source.
 This can be connected via Schottky diode (like BAT46) to the VSYS pin (pin39).
-to have the desired program start automatically at powerup, put "import myprogram" into the file main.py.
+To have the desired program start automatically at powerup, put "import myprogram" into the file main.py.
 
 
 ## Non blocking structure for timing in loops
