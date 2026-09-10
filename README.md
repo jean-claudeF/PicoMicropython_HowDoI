@@ -1,9 +1,17 @@
-# PicoMicropython_HowDoI
-Some tips for me, myself and I, and everyone who wants to use them
+# Pico How Do I
+Some tips for me, myself and I, and everyone who wants to use them. Mostly Micropython, some about hardware.
+
 
 ## Contents:
+- External powering
 - Non blocking structure for timing in loops
 - Daisy chaining serial informations
+
+
+## External powering
+When using sensors it is often better to use a stabilised 5V source.
+This can be connected via Schottky diode (like BAT46) to the VSYS pin (pin39).
+to have the desired program start automatically at powerup, put "import myprogram" into the file main.py.
 
 
 ## Non blocking structure for timing in loops
