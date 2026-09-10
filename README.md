@@ -1,6 +1,11 @@
 # PicoMicropython_HowDoI
 Some tips for me, myself and I, and everyone who wants to use them
 
+## Contents:
+- Non blocking structure for timing in loops
+- Daisy chaining serial informations
+
+
 ## Non blocking structure for timing in loops
 This example shows how to display output values  that are periodically measured,  
 with different timings and without a sleep functions that blocks in the main loop.
@@ -85,9 +90,9 @@ whilest a double 100A Ampèremeter (module B) outputs values like this:
 I want them fitted together like this:
 
 ```  
-A	28996357	48.9	9.77	478	0.42	1158146	33.6	28.5	34.8	30.2	813	0	931.3946		60	-0.07	0	0.017	-0.007	0	0	4.82
-A	28996359	48.82	9.82	479	0.42	1158146	33.7	28.7	35.1	30.2	813	0	954.4613		62	-0.07	0	-0.023	-0.007	0	0	4.82
-A	28996361	48.74	9.83	479	0.42	1158147	33.8	28.8	35.3	30.2	813	0	977.5269		63	-0.07	0	0.044	-0.007	0	0	4.83
+A	28996357	48.9	 ...	60	-0.07	0	0.017	-0.007	0	0	4.82
+A	28996359	48.8 ...	62	-0.07	0	-0.023	-0.007	0	0	4.82
+A	28996361	48.7 ...	63	-0.07	0	0.044	-0.007	0	0	4.83
 
 ```
 
