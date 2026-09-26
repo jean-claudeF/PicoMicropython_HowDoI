@@ -3,10 +3,24 @@ Some tips for me, myself and I, and everyone who wants to use them. Mostly Micro
 
 
 ## Contents:
+- The never reminded instructions
 - External powering
 - Non blocking structure for timing in loops
 - Daisy chaining serial informations
+- Validating serial tabular data
 
+## The never reminded instructions
+This automatically starts the main_loop function when the module is started as a program.  
+When used as a module it only provides the defined functions (like main_loop that can be started from a terminal after the module is imported)
+
+```python
+def main_loop():
+    while True:
+        # do a lot of things
+
+if __name__ == '__main__':
+    main_loop()
+```
 
 ## External powering
 When using sensors it is often better to use a stabilised 5V source.
@@ -137,5 +151,118 @@ while True:
                 uart.write(s)
     # ...
 ```
+
+## Validating serial tabular data
+
+As described above my data mostly consist of tab separated lines. This works quite well, but sometimes data are corrupt and the receiving program hangs. So I spent some time analizing the problem and finding solutions.
+
+### Decoding errors
+If data are decoded from bytes to string as UTF-8 they may contain illegal bytes. This can be handled with try - error.
+The following function returns an empty string if there is an error, otherwise it decodes the bytes normally:
+
+```python
+def readline(uart):
+    s = uart.readline()
+    try:
+        s = s.decode('utf-8').strip()
+    except:
+        s = ""
+        print("# Decode error")
+    return s
+```
+This can be done even more simple if there are online ASCII bytes coming in:
+```python
+def readline_ASCII(uart):
+    s = uart.readline()
+    s = s.decode('latin-1').strip()    # no decode errors possible 
+    return s
+```
+'latin-1' (also known as ISO-8859-1) maps every byte (0–255) directly to the first 256 Unicode code characters, so it will never raise a UnicodeDecodeError.
+
+### Data validation
+The next step is to validate the decoded string. In my case it starts with a capital letter followed by tab (or spaces) separated numbers.
+The following function checks the incoming string and returns it as is. In case of an error it returns an empty string,
+If your data are different, you can easily adapt this function.
+
+```python
+def check_line(line, nbcols):
+        
+    # Also accept spaces as separation and convert them to tabs:
+    line = spaces_to_tab(line)
+    
+    # Return comment lines starting with '#' as they are
+    if line.startswith('#'):
+        return line
+    
+    # Return empty string for empty lines:
+    if not len(line):
+        return "" 
+    
+    # Remove trailing newline and split by tab
+    parts = line.rstrip('\n').split('\t')
+
+    # Check column count
+    if len(parts) != nbcols:
+        return ""
+
+    # Check first column 
+    first_col = parts[0]
+    if not first_col.isupper():
+        return ""
+
+    # Check if remaining columns are numeric
+    for col in parts[1:]:
+        try:
+            float(col)  # Works for both int and float
+        except ValueError:
+            return ""
+    # Valid:
+    return line  
+```
+The function uses a small helper function to convert spaces to tabs if necessary:
+```python
+def spaces_to_tab(line):
+    chunks = line.split() 
+    return '\t'.join(chunks)
+```
+Sometimes when testing I was not sure any more how many columns my data had. This funtion helped a lot:
+```python
+def guess_nbcols(uart):
+    print("Guessing number of columns in data:")
+    for i in range(2):
+        print("Reading line ", i)
+        s = uart.readline()
+        s.decode('latin-1').strip()
+        print(s)
+        cols = s.split()
+        n = len(cols)
+    print("Data have ", n, " columns")    
+    return n
+```
+The function reads 2 lines. Why? It may happen that you call the function in the middle of a received data line. In this case the result would be wrong. The second line however is always good (except if it was empty or a comment. If that bothers you, it can easily be implemented).
+### A sample main program
+This is tested on a PC, but it should work also for a Pico, just change the uart initialisation.
+```python
+import serial
+uart = serial.Serial('/dev/ttyUSB0', baudrate=9600)
+nbcols = guess_nbcols(uart)
+
+i = 0
+errors = 0
+while True:
+    s = readline_ASCII(uart)        
+    s = check_line(s, nbcols)
+    if not s:
+        errors += 1
+        print("# ",  errors)
+    else:    
+        print(i, ": ", s)
+
+```
+
+
+
+
+
 
 
