@@ -170,7 +170,7 @@ def readline(uart):
         print("# Decode error")
     return s
 ```
-This can be done even more simple if there are online ASCII bytes coming in:
+This can be done even more simple if there are only ASCII bytes coming in:
 ```python
 def readline_ASCII(uart):
     s = uart.readline()
@@ -180,7 +180,7 @@ def readline_ASCII(uart):
 'latin-1' (also known as ISO-8859-1) maps every byte (0–255) directly to the first 256 Unicode code characters, so it will never raise a UnicodeDecodeError.
 
 ### Data validation
-The next step is to validate the decoded string. In my case it starts with a capital letter followed by tab (or spaces) separated numbers.
+The next step is to validate the decoded string. In my case it starts with a capital letter (or letters) followed by tab (or spaces) separated numbers.
 The following function checks the incoming string and returns it as is. In case of an error it returns an empty string,
 If your data are different, you can easily adapt this function.
 
