@@ -3,13 +3,14 @@ Some tips for me, myself and I, and everyone who wants to use them. Mostly Micro
 
 
 ## Contents:
-- The never reminded instructions
+- The never remembered instructions
 - External powering
 - Non blocking structure for timing in loops
+- Difference between UART in Micropython and in Python on the PC
 - Daisy chaining serial informations
 - Validating serial tabular data
 
-## The never reminded instructions
+## The never remembered instructions
 This automatically starts the main_loop function when the module is started as a program.  
 When used as a module it only provides the defined functions (like main_loop that can be started from a terminal after the module is imported)
 
@@ -83,6 +84,38 @@ while True:
     # ...
 ```
 
+## Difference between UART in Micropython and in Python on the PC
+While developing a data reception program first on the PC, thaen on the Pico, I stumbled over some differences.
+Two small programs show them:
+
+####Python on a PC:
+Here the readline function is blocking until a line is received.
+```python
+import serial
+uart = serial.Serial('/dev/ttyUSB0', baudrate=9600)
+
+while True:
+    s = uart.readline()
+    s = s.decode('latin-1')
+    print(s)
+```
+
+####Micropython:
+Here the readline function is non blocking, which has the advantage that we can also do other things in our while loop.  
+But we have to check if there are incoming data.
+```python
+from machine import UART, Pin
+uart = UART(0, baudrate=9600, timeout = 10, tx=Pin(0), rx=Pin(1), timeout_char = 10)
+
+while True:
+    s = uart.readline()
+    if s:
+        s = s.decode('latin-1')
+        print(s)
+```
+
+
+
 
 ## Daisy chaining serial informations
 
@@ -154,7 +187,7 @@ while True:
 
 ## Validating serial tabular data
 
-As described above my data mostly consist of tab separated lines. This works quite well, but sometimes data are corrupt and the receiving program hangs. So I spent some time analizing the problem and finding solutions.
+As described above my data mostly consist of tab separated lines. This works quite well, but sometimes data are corrupt and the receiving program hangs. So I spent some time analizing the problem and finding solutions. The following functions are tested on a PC, they should mostly also work in Micropython, see chapter on differences.
 
 ### Decoding errors
 If data are decoded from bytes to string as UTF-8 they may contain illegal bytes. This can be handled with try - error.
@@ -241,7 +274,7 @@ def guess_nbcols(uart):
 ```
 The function reads 2 lines. Why? It may happen that you call the function in the middle of a received data line. In this case the result would be wrong. The second line however is always good (except if it was empty or a comment. If that bothers you, it can easily be implemented).
 ### A sample main program
-This is tested on a PC, but it should work also for a Pico, just change the uart initialisation.
+This is tested on a PC, but it should work also for a Pico, just change the uart initialisation and remember that in Micropython readline is not blocking, so you have to add an if to handle the None case for s.
 ```python
 import serial
 uart = serial.Serial('/dev/ttyUSB0', baudrate=9600)
