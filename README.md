@@ -9,6 +9,7 @@ Some tips for me, myself and I, and everyone who wants to use them. Mostly Micro
 - Difference between UART in Micropython and in Python on the PC
 - Daisy chaining serial informations
 - Validating serial tabular data
+- Can I rely on Serial.readline ?
 
 ## The never remembered instructions
 This automatically starts the main_loop function when the module is started as a program.  
@@ -219,7 +220,7 @@ If your data are different, you can easily adapt this function.
 
 ```python
 def check_line(line, nbcols):
-        
+        - Can I rely on Serial.readline ?
     # Also accept spaces as separation and convert them to tabs:
     line = spaces_to_tab(line)
     
@@ -250,7 +251,7 @@ def check_line(line, nbcols):
         except ValueError:
             return ""
     # Valid:
-    return line  
+    return line  - Can I rely on Serial.readline ?
 ```
 The function uses a small helper function to convert spaces to tabs if necessary:
 ```python
@@ -273,7 +274,7 @@ def guess_nbcols(uart):
     return n
 ```
 The function reads 2 lines. Why? It may happen that you call the function in the middle of a received data line. In this case the result would be wrong. The second line however is always good (except if it was empty or a comment. If that bothers you, it can easily be implemented).
-### A sample main program
+### A sample main program for the PC
 This is tested on a PC, but it should work also for a Pico, just change the uart initialisation and remember that in Micropython readline is not blocking, so you have to add an if to handle the None case for s.
 ```python
 import serial
@@ -294,7 +295,65 @@ while True:
 ```
 
 
+### Can I rely on Serial.readline or should I use ReadSerialLines instead?
+Good question! After all the validation checks, there should be no problem. Nevertheless I had a hanging microcontroller sometimes. So I came back to a class I had written some time ago to read serial data into a buffer:
+```python
+class ReadSerialLines():
+    def __init__(self, uart):
+        self.uart = uart
+        self.buffer = b""
+        self.buffer_ready = False
+        self.c = b''
+        self.decode_mode = 'utf-8'
+    
+    def read(self):
+        # read one line until '\n'
+        # Non blocking, s="" until whole line received
+        s = self.read_raw()
+        if s:
+            try:
+                s = s.decode( self.decode_mode)
+            except:
+                s = ""    
+        return s
+    
+    def read_raw(self):
+        # Read serial, fill buffer and return empty string until '\n' encountered
+        # Then return buffer
+        if self.uart.any():
+            
+            self.c = self.uart.read(1)
+            if self.c == b'\n':
+                self.buffer_ready = True
+            else:
+                self.buffer += self.c
+                
+        if self.buffer_ready:
+            s = self.buffer
+            self.buffer = b""
+            self.buffer_ready = False
+            
+            return s
+        else:
+            return ""
+```
+This can be used like this:
+```python
+from machine import UART
+uart0 = UART(0, baudrate=9600, timeout = 10, tx=Pin(0), rx=Pin(1), timeout_char = 10)
+serReader = ReadSerialLines(uart0)
 
+s_checked = ""
+while True:   
+    s = serReader.read()
+    
+    if s:    
+        s_checked = check_line(s, 22)
+    
+        if s_checked:
+            print(s_checked)
+			# do something with s_checked
+```
 
 
 
